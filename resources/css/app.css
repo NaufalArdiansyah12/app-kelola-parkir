@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-canvas: #f5f2eb;
+    --color-sidebar: #262628;
+    --color-panel-warm: #ece7de;
+    --color-panel-border: #ddd7cb;
+    --color-pastel-green: #e4ede5;
+    --color-pastel-green-text: #336841;
+    --color-pastel-yellow: #fdf4dc;
+    --color-pastel-yellow-text: #876510;
+    --color-pastel-purple: #8e9aff;
+    --color-pastel-purple-dark: #6f7de8;
+    --color-ink: #171717;
+    --color-muted: #8e8e93;
+    --color-chart-track: #eae5db;
+    --color-chart-bar: #1e1e1e;
+    --color-accent: #6366f1;
+
+    --radius-canvas: 36px;
+    --radius-card-xl: 24px;
+}
+
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d5cebe;
+    border-radius: 9999px;
+}
+
+@media print {
+    body {
+        background: #fff;
+    }
+}
