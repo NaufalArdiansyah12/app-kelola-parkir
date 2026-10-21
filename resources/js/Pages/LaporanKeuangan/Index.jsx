@@ -126,7 +126,7 @@ export default function LaporanKeuanganIndex({
                             {/* Tombol Export Excel */}
                             <a
                                 href={isExcelDisabled ? undefined : buildExportUrl(`${baseUrl}/export-excel`)}
-                                className={`inline-flex items-center justify-center gap-1.5 rounded-xl border border-pastel-green-text/25 bg-pastel-green px-3.5 py-2 text-xs font-bold text-pastel-green-text transition hover:bg-[#D8E6DA] ${
+                                className={`inline-flex items-center justify-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 ${
                                     isExcelDisabled ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''
                                 }`}
                                 title="Unduh data format Spreadsheet CSV/Excel"
@@ -152,7 +152,7 @@ export default function LaporanKeuanganIndex({
                             {/* Tombol Export PDF */}
                             <a
                                 href={isPdfDisabled ? undefined : buildExportUrl(`${baseUrl}/export-pdf`)}
-                                className={`inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-xs font-bold text-red-700 transition hover:bg-red-100 ${
+                                className={`inline-flex items-center justify-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 transition hover:bg-red-100 ${
                                     isPdfDisabled ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''
                                 }`}
                                 title={
@@ -176,7 +176,7 @@ export default function LaporanKeuanganIndex({
                                 </svg>
                                 Export PDF
                                 {!canExportPdf && (
-                                    <span className="ml-1 rounded-sm bg-red-200 px-1 text-[10px] text-red-900">
+                                    <span className="ml-1 rounded-full bg-red-200 px-1.5 text-[10px] text-red-900">
                                         &gt;1000
                                     </span>
                                 )}

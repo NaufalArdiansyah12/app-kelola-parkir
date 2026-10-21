@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['id_kendaraan', 'waktu_masuk', 'waktu_keluar', 'id_tarif', 'durasi_jam', 'biaya_total', 'status', 'id_user', 'id_area', 'nomor_slot'])]
+#[Fillable(['id_kendaraan', 'waktu_masuk', 'waktu_keluar', 'id_tarif', 'durasi_jam', 'biaya_total', 'status', 'metode_pembayaran', 'midtrans_order_id', 'snap_token', 'status_transaksi_midtrans', 'id_user', 'id_area', 'nomor_slot'])]
 class Transaksi extends Model
 {
     public $timestamps = false;

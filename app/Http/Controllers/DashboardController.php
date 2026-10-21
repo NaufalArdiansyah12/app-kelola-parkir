@@ -20,12 +20,134 @@ class DashboardController extends Controller
         $user = $request->user();
         $hariIni = Carbon::today();
 
+        $periode = (string) $request->query('periode', 'minggu');
+        if (! in_array($periode, ['minggu', 'bulan', 'tahun'], true)) {
+            $periode = 'minggu';
+        }
+
+        $petugasParam = $request->query('petugas');
+        $petugasId = ($petugasParam && $petugasParam !== 'semua' && is_numeric($petugasParam)) ? (int) $petugasParam : null;
+
+        $petugasOptions = User::whereIn('role', ['petugas', 'admin'])
+            ->orderBy('nama_lengkap')
+            ->get(['id_user', 'nama_lengkap', 'username', 'role']);
+
+        $selectedPetugasName = 'Semua Petugas';
+        if ($petugasId) {
+            $found = $petugasOptions->firstWhere('id_user', $petugasId);
+            if ($found) {
+                $selectedPetugasName = $found->nama_lengkap;
+            }
+        }
+
         $statistik = [
             'kendaraan_aktif' => Transaksi::where('status', 'masuk')->count(),
             'transaksi_hari_ini' => Transaksi::where('status', 'keluar')->whereDate('waktu_keluar', $hariIni)->count(),
             'pendapatan_hari_ini' => (int) Transaksi::where('status', 'keluar')->whereDate('waktu_keluar', $hariIni)->sum('biaya_total'),
         ];
 
+        // 1. Hitung data grafik pendapatan dinamis (per minggu, bulan, tahun & filter petugas)
+        $chartQuery = Transaksi::query()->where('status', 'keluar');
+        if ($petugasId) {
+            $chartQuery->where('id_user', $petugasId);
+        }
+
+        if ($periode === 'tahun') {
+            $start = $hariIni->copy()->startOfYear();
+            $end = $hariIni->copy()->endOfYear();
+
+            $transaksiList = (clone $chartQuery)
+                ->whereBetween('waktu_keluar', [$start, $end])
+                ->get(['biaya_total', 'waktu_keluar']);
+
+            $grouped = $transaksiList->groupBy(fn ($t) => (int) $t->waktu_keluar->format('n'));
+
+            $chartPendapatan = collect(range(1, 12))->map(function (int $m) use ($hariIni, $grouped) {
+                $items = $grouped->get($m, collect());
+                $dt = Carbon::create($hariIni->year, $m, 1);
+
+                return [
+                    'key' => (string) $m,
+                    'label' => $dt->locale('id')->isoFormat('MMM'),
+                    'sub' => (string) $hariIni->year,
+                    'pendapatan' => (int) $items->sum('biaya_total'),
+                    'jumlah' => $items->count(),
+                ];
+            })->values();
+        } elseif ($periode === 'bulan') {
+            $start = $hariIni->copy()->startOfMonth();
+            $end = $hariIni->copy()->endOfMonth();
+            $daysInMonth = $hariIni->daysInMonth;
+
+            $transaksiList = (clone $chartQuery)
+                ->whereBetween('waktu_keluar', [$start, $end])
+                ->get(['biaya_total', 'waktu_keluar']);
+
+            $grouped = $transaksiList->groupBy(fn ($t) => (int) $t->waktu_keluar->format('j'));
+
+            $monthName = $hariIni->locale('id')->isoFormat('MMM');
+            $intervals = [
+                ['start' => 1, 'end' => 7, 'label' => 'Mg 1', 'sub' => '1-7 '.$monthName],
+                ['start' => 8, 'end' => 14, 'label' => 'Mg 2', 'sub' => '8-14 '.$monthName],
+                ['start' => 15, 'end' => 21, 'label' => 'Mg 3', 'sub' => '15-21 '.$monthName],
+                ['start' => 22, 'end' => 28, 'label' => 'Mg 4', 'sub' => '22-28 '.$monthName],
+            ];
+            if ($daysInMonth > 28) {
+                $intervals[] = [
+                    'start' => 29,
+                    'end' => $daysInMonth,
+                    'label' => 'Mg 5',
+                    'sub' => '29-'.$daysInMonth.' '.$monthName,
+                ];
+            }
+
+            $chartPendapatan = collect($intervals)->map(function ($intv) use ($grouped) {
+                $pendapatan = 0;
+                $jumlah = 0;
+                for ($d = $intv['start']; $d <= $intv['end']; $d++) {
+                    $items = $grouped->get($d, collect());
+                    $pendapatan += (int) $items->sum('biaya_total');
+                    $jumlah += $items->count();
+                }
+
+                return [
+                    'key' => $intv['label'],
+                    'label' => $intv['label'],
+                    'sub' => $intv['sub'],
+                    'pendapatan' => $pendapatan,
+                    'jumlah' => $jumlah,
+                ];
+            })->values();
+        } else {
+            // Default: 'minggu' (7 hari terakhir)
+            $start = $hariIni->copy()->subDays(6)->startOfDay();
+            $end = $hariIni->copy()->endOfDay();
+
+            $transaksiList = (clone $chartQuery)
+                ->whereBetween('waktu_keluar', [$start, $end])
+                ->get(['biaya_total', 'waktu_keluar']);
+
+            $grouped = $transaksiList->groupBy(fn ($t) => $t->waktu_keluar->format('Y-m-d'));
+
+            $chartPendapatan = collect(range(6, 0))->map(function (int $mundur) use ($hariIni, $grouped) {
+                $tgl = $hariIni->copy()->subDays($mundur);
+                $str = $tgl->toDateString();
+                $items = $grouped->get($str, collect());
+
+                return [
+                    'key' => $str,
+                    'label' => $tgl->locale('id')->isoFormat('ddd'),
+                    'sub' => $tgl->format('d/m'),
+                    'pendapatan' => (int) $items->sum('biaya_total'),
+                    'jumlah' => $items->count(),
+                ];
+            })->values();
+        }
+
+        $totalPendapatanChart = (int) $chartPendapatan->sum('pendapatan');
+        $totalTransaksiChart = (int) $chartPendapatan->sum('jumlah');
+
+        // 2. Data aktivitas masuk 7 hari (kompatibilitas grafik lama)
         $masukPerHari = Transaksi::query()
             ->whereBetween('waktu_masuk', [$hariIni->copy()->subDays(6)->startOfDay(), $hariIni->copy()->endOfDay()])
             ->selectRaw('DATE(waktu_masuk) as tanggal, COUNT(*) as jumlah')
@@ -74,6 +196,15 @@ class DashboardController extends Controller
             'chart' => $chart,
             'jenis' => $jenis,
             'recent' => $recent,
+            'chartPendapatan' => $chartPendapatan,
+            'totalPendapatanChart' => $totalPendapatanChart,
+            'totalTransaksiChart' => $totalTransaksiChart,
+            'petugasOptions' => $petugasOptions,
+            'chartFilters' => [
+                'periode' => $periode,
+                'petugas' => $petugasId ? (string) $petugasId : 'semua',
+                'petugas_nama' => $selectedPetugasName,
+            ],
             'tambahan' => $user->role === 'admin'
                 ? [
                     'total_user' => User::count(),

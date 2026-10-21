@@ -1,112 +1,96 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { ConfirmModal } from './ui';
 
-/**
- * Custom Icon Set matching the modern rounded/dual-tone sidebar reference
- */
 const icons = {
-    brandCube: (
-        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.8">
-            <rect x="2" y="2" width="20" height="20" rx="3.5" stroke="currentColor" strokeWidth="1.8" />
-            <path d="M12 7.5l5 2.8v5.4l-5 2.8-5-2.8v-5.4l5-2.8z" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M12 7.5v11M12 13l5-2.7M12 13l-5-2.7" stroke="currentColor" strokeWidth="1.5" />
+    sparkle: (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2z" />
         </svg>
     ),
-    dashboard: ({ active }) => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none">
-            {/* Pie chart dual-tone */}
-            <path
-                d="M11 3.05a9 9 0 1 0 9.95 9.95H11V3.05z"
-                fill={active ? '#7C7CEE' : '#71717A'}
-            />
-            <path
-                d="M13.5 2.1a9 9 0 0 1 8.4 8.4H13.5V2.1z"
-                fill={active ? '#FCD34D' : '#A1A1AA'}
-            />
+    brush: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 2.625a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.375-9.375z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 6l4 4" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 20h16" />
+        </svg>
+    ),
+    dashboard: () => (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            <rect x="3" y="14" width="7" height="7" rx="1.5" />
         </svg>
     ),
     user: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm0 2.5c-4.42 0-8 2.24-8 5v1a1.5 1.5 0 0 0 1.5 1.5h13a1.5 1.5 0 0 0 1.5-1.5v-1c0-2.76-3.58-5-8-5z" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
         </svg>
     ),
     tarif: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <rect x="3" y="4" width="18" height="16" rx="4" />
-            <rect x="6" y="8" width="5" height="2.5" rx="1.25" fill="#27272A" />
-            <circle cx="16" cy="14" r="2.2" fill="#27272A" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+            <line x1="7" y1="7" x2="7.01" y2="7" />
         </svg>
     ),
     area: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <path fillRule="evenodd" clipRule="evenodd" d="M12 2a7.5 7.5 0 0 0-7.5 7.5c0 5.4 7.5 12.5 7.5 12.5s7.5-7.1 7.5-12.5A7.5 7.5 0 0 0 12 2zm0 10.2a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4z" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
         </svg>
     ),
     kendaraan: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <path d="M5 8.5a2 2 0 0 1 1.8-1.1h10.4a2 2 0 0 1 1.8 1.1l1.8 3.6A2 2 0 0 1 21 13v4a1.5 1.5 0 0 1-1.5 1.5H18a2 2 0 0 1-4 0H10a2 2 0 0 1-4 0H4.5A1.5 1.5 0 0 1 3 17v-4c0-.35.09-.7.25-1L5 8.5zm3 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm8 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 11l2-4h10l2 4M3 15h18M4 11v6a1 1 0 001 1h1m12 0h1a1 1 0 001-1v-6M7 15a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm10 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
         </svg>
     ),
     keuangan: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <rect x="2" y="5" width="20" height="14" rx="3.5" />
-            <circle cx="12" cy="12" r="3" fill="#27272A" />
-            <path d="M6 10h1v4H6zm11 0h1v4h-1z" fill="#27272A" />
-        </svg>
-    ),
-    log: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <rect x="3" y="4" width="18" height="16" rx="4" />
-            <path d="M7 9h10v2H7zm0 4h6v2H7z" fill="#27272A" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <ellipse cx="12" cy="5" rx="9" ry="3" />
+            <path strokeLinecap="round" d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+            <path strokeLinecap="round" d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
         </svg>
     ),
     parkir: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <rect x="3" y="3" width="18" height="18" rx="4.5" />
-            <path d="M9.5 7h4a3 3 0 0 1 0 6H12v4H9.5V7zm2.5 4h1.5a1 1 0 0 0 0-2H12v2z" fill="#27272A" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <rect x="4" y="4" width="16" height="16" rx="4" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 16V8h4a2.5 2.5 0 010 5H9" />
         </svg>
     ),
     checkin: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <rect x="3" y="4" width="18" height="16" rx="4.5" />
-            <path d="M12 8l4 4-4 4v-2.5H8v-3h4V8z" fill="#27272A" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
         </svg>
     ),
     checkout: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <rect x="3" y="4" width="18" height="16" rx="4.5" />
-            <path d="M12 8l-4 4 4 4v-2.5h4v-3h-4V8z" fill="#27272A" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
     ),
     rekap: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h13A1.5 1.5 0 0 1 20 4.5V6H4V4.5zM4 8h16v1.5a3.5 3.5 0 0 1-3.5 3.5h-9A3.5 3.5 0 0 1 4 9.5V8zm4 7h8a1.5 1.5 0 0 1 1.5 1.5v.5a3.5 3.5 0 0 1-3.5 3.5H9A3.5 3.5 0 0 1 5.5 17v-.5A1.5 1.5 0 0 1 7 15h1z" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
     ),
     logout: () => (
-        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor">
-            <rect x="3" y="4" width="18" height="16" rx="4.5" />
-            <path d="M11 9l3 3-3 3v-2H8v-2h3V9z" fill="#27272A" />
-        </svg>
-    ),
-    close: () => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
     ),
     menu: () => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5">
-            <line x1="4" y1="7" x2="20" y2="7" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="h-5 w-5">
+            <line x1="4" y1="6" x2="20" y2="6" />
             <line x1="4" y1="12" x2="20" y2="12" />
-            <line x1="4" y1="17" x2="20" y2="17" />
+            <line x1="4" y1="18" x2="20" y2="18" />
         </svg>
     ),
     calendar: () => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
-            <rect width="18" height="18" x="3" y="4" rx="3" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" />
+            <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" />
             <line x1="3" y1="10" x2="21" y2="10" />
         </svg>
     ),
@@ -115,17 +99,17 @@ const icons = {
 const navByRole = {
     admin: [
         { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
-        { label: 'User', href: '/users', icon: 'user' },
-        { label: 'Tarif', href: '/tarif', icon: 'tarif' },
+        { label: 'Kelola User', href: '/users', icon: 'user' },
+        { label: 'Tarif Parkir', href: '/tarif', icon: 'tarif' },
         { label: 'Area Parkir', href: '/area', icon: 'area' },
-        { label: 'Kendaraan', href: '/kendaraan', icon: 'kendaraan' },
+        { label: 'Tambah Kendaraan', href: '/kendaraan', icon: 'kendaraan' },
         { label: 'Laporan Keuangan', href: '/laporan-keuangan', icon: 'keuangan' },
     ],
     petugas: [
         { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
         { label: 'Parkir Aktif', href: '/transaksi', icon: 'parkir' },
-        { label: 'Check-In', href: '/transaksi/masuk', icon: 'checkin' },
-        { label: 'Check-Out', href: '/transaksi/keluar', icon: 'checkout' },
+        { label: 'Pos Check-In', href: '/transaksi/masuk', icon: 'checkin' },
+        { label: 'Pos Check-Out', href: '/transaksi/keluar', icon: 'checkout' },
     ],
     owner: [
         { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
@@ -139,10 +123,17 @@ const roleLabel = {
     owner: 'Owner',
 };
 
+const roleSubLabel = {
+    admin: 'Admin Hub',
+    petugas: 'Pos Petugas',
+    owner: 'Owner Hub',
+};
+
 export default function Layout({ title, subtitle, children, aside }) {
     const page = usePage();
     const { auth, flash } = page.props;
     const [open, setOpen] = useState(false);
+    const [logoutModalOpen, setLogoutModalOpen] = useState(false);
     const nav = navByRole[auth?.role] ?? [];
 
     const isActive = (href) => {
@@ -181,171 +172,167 @@ export default function Layout({ title, subtitle, children, aside }) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-4 py-2.5 px-3 text-sm font-medium transition-colors ${
-                    active ? 'text-[#FDE68A]' : 'text-zinc-400 hover:text-zinc-200'
+                className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl text-xs transition-all ${
+                    active
+                        ? 'bg-[#F8C838] text-[#17182B] font-extrabold shadow-sm'
+                        : 'font-semibold text-[#7A7E8D] hover:text-[#17182B] hover:bg-white/80'
                 }`}
             >
-                <span className={active ? 'text-inherit' : 'text-zinc-500'}>
-                    {IconComponent ? <IconComponent active={active} /> : null}
+                <span className={active ? 'text-[#17182B]' : 'text-[#7A7E8D]'}>
+                    {IconComponent ? <IconComponent /> : null}
                 </span>
-                <span className="truncate tracking-wide">{item.label}</span>
+                <span className="truncate">{item.label}</span>
             </Link>
         );
     });
 
-    const LogoutIcon = icons.logout;
-
     return (
-        <div className="min-h-screen bg-canvas text-ink antialiased">
-            {/* Header Mobile */}
-            <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between bg-sidebar px-5 py-3.5 text-white shadow-lg lg:hidden">
-                <div className="flex items-center gap-2.5">
-                    <span className="text-white">{icons.brandCube}</span>
-                    <span className="text-lg font-bold tracking-tight">ParkirKu</span>
+        <div className="min-h-screen w-full bg-[#F3F4F8] text-[#15161E] font-sans antialiased flex flex-col selection:bg-[#F8C838] selection:text-[#17182B]">
+            {/* Responsive Mobile Header */}
+            <header className="lg:hidden flex items-center justify-between px-5 py-4 bg-white/95 backdrop-blur border-b border-[#E8EBF0] z-30 sticky top-0">
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setOpen(!open)}
+                        aria-label="Buka Navigasi"
+                        className="p-2 rounded-xl bg-[#F8F9FC] text-[#17182B] hover:bg-[#F8C838] transition-all active:scale-95"
+                    >
+                        <span className="text-[#17182B]">{icons.menu()}</span>
+                    </button>
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-[#F8C838] flex items-center justify-center text-[#17182B] font-black shadow-sm">
+                            {icons.sparkle}
+                        </div>
+                        <div>
+                            <h1 className="font-black text-xs uppercase tracking-wider text-[#17182B] leading-none">Parkir</h1>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#7A7E8D]">
+                                {roleSubLabel[auth?.role] ?? 'Workspace'}
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <button
-                    type="button"
-                    onClick={() => setOpen(true)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 active:scale-95"
-                    aria-label="Buka navigasi"
-                >
-                    {icons.menu()}
-                </button>
+
+                <div className="w-8 h-8 rounded-full ring-2 ring-emerald-500 overflow-hidden bg-emerald-50 flex items-center justify-center font-bold text-xs text-[#17182B]">
+                    {auth?.avatar ? (
+                        <img src={auth.avatar} alt={auth.nama_lengkap} className="w-full h-full object-cover" />
+                    ) : (
+                        <span>{initials}</span>
+                    )}
+                </div>
             </header>
 
-            {/* Backdrop Mobile */}
-            <div
-                onClick={() => setOpen(false)}
-                className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity lg:hidden ${
-                    open ? 'opacity-100' : 'pointer-events-none opacity-0'
-                }`}
-            />
+            {/* Mobile Backdrop */}
+            {open && (
+                <div
+                    onClick={() => setOpen(false)}
+                    className="fixed inset-0 bg-[#17182B]/40 backdrop-blur-xs z-40 lg:hidden"
+                />
+            )}
 
-            <div className="flex min-h-screen w-full bg-canvas pt-14 lg:pt-0">
-                {/* Sidebar (Sesuai Gaya Desain Gambar: background #262628 / Dark Graphite) */}
+            <div className="flex-1 flex flex-col lg:flex-row relative">
+                {/* Left Navigation Sidebar */}
                 <aside
-                    className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col justify-between overflow-y-auto bg-sidebar px-6 py-8 text-white transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
-                        open ? 'translate-x-0' : '-translate-x-full'
+                    className={`fixed lg:sticky lg:top-0 lg:h-screen inset-y-0 left-0 z-50 w-[250px] bg-[#F3F4F8] p-6 flex flex-col justify-between transform transition-transform duration-300 ease-in-out border-r border-[#E8EBF0] shrink-0 overflow-y-auto ${
+                        open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     }`}
                 >
-                    <div className="flex flex-col">
-                        {/* Logo & Brand */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <span className="text-white">{icons.brandCube}</span>
-                                <span className="text-xl font-bold tracking-tight text-white">ParkirKu</span>
+                    <div>
+                        {/* Brand Badge */}
+                        <div className="flex items-center gap-3 px-1 py-1 mb-8">
+                            <div className="w-10 h-10 rounded-2xl bg-[#F8C838] flex items-center justify-center text-[#17182B] shadow-yellow-glow">
+                                {icons.brush}
                             </div>
+                            <div>
+                                <h2 className="font-black text-base tracking-wider uppercase text-[#17182B] leading-tight">Parkir</h2>
+                                <p className="text-xs font-bold tracking-widest uppercase text-[#7A7E8D] leading-none">
+                                    {roleSubLabel[auth?.role] ?? 'Workspace'}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Nav items */}
+                        <nav className="space-y-1.5" aria-label="Navigasi utama">
+                            {navItems}
+
                             <button
                                 type="button"
-                                onClick={() => setOpen(false)}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:text-white lg:hidden"
-                                aria-label="Tutup navigasi"
+                                onClick={() => setLogoutModalOpen(true)}
+                                className="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50/80 transition-all text-left"
                             >
-                                {icons.close()}
+                                <span className="text-red-400">{icons.logout()}</span>
+                                <span>Log Out</span>
                             </button>
-                        </div>
-
-                        {/* Profile Section */}
-                        <div className="mt-8 flex flex-col items-center text-center">
-                            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-700 bg-zinc-800 text-xl font-bold text-zinc-200 shadow-md">
-                                {auth?.avatar ? (
-                                    <img src={auth.avatar} alt="Avatar" className="h-full w-full object-cover" />
-                                ) : (
-                                    <span>{initials}</span>
-                                )}
-                            </div>
-                            <span className="mt-4 text-xs font-normal text-zinc-400">Welcome Back,</span>
-                            <h2 className="mt-0.5 text-base font-semibold tracking-tight text-white">
-                                {auth?.nama_lengkap}
-                            </h2>
-                        </div>
-
-                        {/* Navigation Items */}
-                        <nav className="mt-10 flex flex-col gap-1.5" aria-label="Navigasi utama">
-                            {navItems}
                         </nav>
                     </div>
 
-                    {/* Bottom Logout */}
-                    <div className="pt-6">
-                        <Link
-                            href="/logout"
-                            method="post"
-                            as="button"
-                            className="flex w-full items-center gap-4 px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-200 active:scale-95"
-                        >
-                            <span className="text-zinc-500">
-                                <LogoutIcon />
-                            </span>
-                            <span className="tracking-wide">Log Out</span>
-                        </Link>
+                    {/* Help Center Card */}
+                    <div className="relative mt-8 pt-4">
+                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-[#F8C838] border-4 border-[#F3F4F8] text-[#17182B] flex items-center justify-center font-black text-sm shadow-md z-10 pointer-events-auto">
+                            <span>?</span>
+                        </div>
+
+                        <div className="bg-[#17182B] rounded-[28px] p-5 pt-8 text-center text-white relative shadow-elevated border border-white/5">
+                            <h3 className="font-bold text-sm mb-1 text-white tracking-tight">Pusat Bantuan</h3>
+                            <p className="text-[11px] text-gray-300 mb-4 leading-relaxed font-normal">
+                                Butuh panduan operasional?<br />Hubungi koordinator pos!
+                            </p>
+                            <Link
+                                href="/dashboard"
+                                className="block w-full py-2.5 px-3 bg-white hover:bg-gray-100 text-[#17182B] text-xs font-bold rounded-full transition-all active:scale-95 shadow-sm text-center"
+                            >
+                                Buka Dashboard
+                            </Link>
+                        </div>
                     </div>
                 </aside>
 
-                {/* Main Content Area */}
-                <div className="flex min-w-0 flex-1 flex-col">
-                    <header className="sticky top-0 z-30 hidden h-16 items-center justify-between gap-4 border-b border-panel-border bg-canvas/85 px-8 backdrop-blur lg:flex xl:px-10">
+                {/* Main Stage */}
+                <div className="flex-1 flex flex-col min-w-0">
+                    {/* Topbar Header */}
+                    <header className="hidden lg:flex h-16 items-center justify-between gap-4 border-b border-[#E8EBF0] bg-[#F3F4F8]/90 px-8 backdrop-blur sticky top-0 z-30">
                         <div className="min-w-0">
-                            <h1 className="truncate text-base font-extrabold tracking-tight text-ink">{title}</h1>
-                            {subtitle && (
-                                <p className="truncate text-[11px] font-medium text-muted">{subtitle}</p>
-                            )}
+                            <h1 className="truncate text-base font-extrabold tracking-tight text-[#17182B]">{title}</h1>
+                            {subtitle && <p className="truncate text-[11px] font-medium text-[#7A7E8D]">{subtitle}</p>}
                         </div>
 
-                        <div className="flex shrink-0 items-center gap-2.5">
-                            <span className="hidden items-center gap-1.5 rounded-full border border-panel-border bg-white px-3 py-1.5 text-[11px] font-semibold text-muted xl:inline-flex">
+                        <div className="flex shrink-0 items-center gap-3">
+                            <span className="hidden items-center gap-1.5 rounded-full border border-[#E8EBF0] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#7A7E8D] xl:inline-flex shadow-2xs">
                                 {icons.calendar()}
                                 {today}
                             </span>
 
-                            <div className="flex items-center gap-2.5 rounded-full border border-panel-border bg-white py-1 pr-3.5 pl-1">
-                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sidebar text-[10px] font-extrabold text-white">
+                            <div className="flex items-center gap-2.5 rounded-full border border-[#E8EBF0] bg-white py-1 pr-3.5 pl-1 shadow-2xs">
+                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#17182B] text-[10px] font-extrabold text-white">
                                     {initials}
                                 </span>
-                                <span className="hidden leading-tight sm:block">
-                                    <span className="block text-[11px] font-bold text-ink">
-                                        {auth?.nama_lengkap}
-                                    </span>
-                                    <span className="block text-[10px] font-medium text-muted">
-                                        {roleLabel[auth?.role]}
-                                    </span>
+                                <span className="leading-tight">
+                                    <span className="block text-[11px] font-bold text-[#17182B]">{auth?.nama_lengkap}</span>
+                                    <span className="block text-[10px] font-medium text-[#7A7E8D]">{roleLabel[auth?.role]}</span>
                                 </span>
                             </div>
 
-                            <Link
-                                href="/logout"
-                                method="post"
-                                as="button"
-                                className="inline-flex items-center gap-1.5 rounded-full border border-panel-border bg-white px-3 py-2 text-[11px] font-semibold text-muted transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 active:scale-95"
-                                aria-label="Log Out"
+                            <button
+                                type="button"
+                                onClick={() => setLogoutModalOpen(true)}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-[#E8EBF0] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#7A7E8D] transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 active:scale-95 shadow-2xs"
                             >
-                                <span className="text-zinc-500 scale-90"><LogoutIcon /></span>
+                                <span className="text-red-500 scale-90">{icons.logout()}</span>
                                 <span className="hidden xl:inline">Log Out</span>
-                            </Link>
+                            </button>
                         </div>
                     </header>
 
-                    <div className="flex min-w-0 flex-1 flex-col lg:flex-row">
-                        <main className="flex min-w-0 flex-1 flex-col gap-7 p-5 md:p-8 lg:p-10">
-                            <div className="flex flex-wrap items-start justify-between gap-3 lg:hidden">
-                                <div>
-                                    <h1 className="text-2xl font-extrabold tracking-tight text-ink">{title}</h1>
-                                    {subtitle && (
-                                        <p className="mt-0.5 text-xs font-medium text-muted">{subtitle}</p>
-                                    )}
-                                </div>
-                                <span className="rounded-full border border-panel-border bg-white px-3 py-1 text-[11px] font-semibold text-muted">
-                                    @{auth?.username}
-                                </span>
-                            </div>
-
+                    <div className="flex-1 flex flex-col lg:flex-row">
+                        <main className="flex-1 min-w-0 p-5 md:p-8 lg:p-9 space-y-7">
                             {flash?.success && (
-                                <div className="rounded-xl border border-[#CFE0D1] bg-pastel-green px-4 py-3 text-xs font-semibold text-pastel-green-text">
+                                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800 shadow-2xs flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
                                     {flash.success}
                                 </div>
                             )}
                             {flash?.error && (
-                                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700">
+                                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 shadow-2xs flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-red-500" />
                                     {flash.error}
                                 </div>
                             )}
@@ -354,13 +341,25 @@ export default function Layout({ title, subtitle, children, aside }) {
                         </main>
 
                         {aside && (
-                            <aside className="w-full shrink-0 border-t border-panel-border bg-panel-warm p-5 md:p-8 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:w-80 lg:overflow-y-auto lg:border-t-0 lg:border-l">
+                            <aside className="w-full lg:w-[330px] shrink-0 border-t lg:border-t-0 lg:border-l border-[#E8EBF0] bg-[#F3F4F8] p-6 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto">
                                 {aside}
                             </aside>
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* Logout Warning Modal */}
+            <ConfirmModal
+                open={logoutModalOpen}
+                onClose={() => setLogoutModalOpen(false)}
+                onConfirm={() => router.post('/logout')}
+                title="Konfirmasi Keluar"
+                message="Apakah Anda yakin ingin keluar dari akun ini? Sesi operasional Anda saat ini akan diakhiri."
+                confirmText="Ya, Log Out"
+                cancelText="Batal"
+                variant="warning"
+            />
         </div>
     );
 }

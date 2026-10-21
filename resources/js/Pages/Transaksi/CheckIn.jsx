@@ -111,7 +111,7 @@ export default function CheckIn({ area, jenisOptions = ['motor', 'mobil', 'lainn
                         <div className="flex items-center gap-2">
                             <Link
                                 href="/transaksi"
-                                className="rounded-xl border border-panel-border bg-panel-warm px-3.5 py-2 text-xs font-bold text-ink hover:bg-[#E1DACB]"
+                                className="rounded-full border border-[#E8EBF0] bg-white px-4 py-2 text-xs font-bold text-[#7A7E8D] hover:text-[#17182B] hover:bg-[#F8F9FC] shadow-2xs transition-colors"
                             >
                                 Daftar Parkir Aktif
                             </Link>
@@ -129,13 +129,13 @@ export default function CheckIn({ area, jenisOptions = ['motor', 'mobil', 'lainn
                             return (
                                 <div
                                     key={item.id_area}
-                                    className="flex flex-col justify-between rounded-xl border border-panel-border bg-[#FCFBF8] p-4 transition hover:border-ink/30"
+                                    className="flex flex-col justify-between rounded-[22px] border border-[#E8EBF0] bg-white p-5 transition hover:shadow-soft"
                                 >
                                     <div>
                                         <div className="flex items-start justify-between gap-2">
                                             <div>
-                                                <h3 className="font-bold text-ink">{item.nama_area}</h3>
-                                                <p className="text-[11px] text-muted">Kode: {item.kode || '-'}</p>
+                                                <h3 className="font-extrabold text-sm text-[#17182B]">{item.nama_area}</h3>
+                                                <p className="text-[11px] text-[#7A7E8D]">Kode: {item.kode || '-'}</p>
                                             </div>
                                             <Badge tone={isPenuh ? 'red' : 'green'}>
                                                 {isPenuh ? 'Penuh' : `Sisa ${item.sisa}`}
@@ -144,14 +144,14 @@ export default function CheckIn({ area, jenisOptions = ['motor', 'mobil', 'lainn
 
                                         {/* Progress Bar Kuota */}
                                         <div className="mt-4 space-y-1">
-                                            <div className="flex justify-between text-[11px] font-medium text-muted">
+                                            <div className="flex justify-between text-[11px] font-bold text-[#7A7E8D]">
                                                 <span>Terisi {item.terisi}/{item.kapasitas}</span>
                                                 <span>{persenTerisi}%</span>
                                             </div>
-                                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EAE5DB]">
+                                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#F3F4F8]">
                                                 <div
                                                     className={`h-full rounded-full transition-all ${
-                                                        isPenuh ? 'bg-red-500' : persenTerisi > 80 ? 'bg-pastel-yellow-text' : 'bg-ink'
+                                                        isPenuh ? 'bg-red-500' : persenTerisi > 80 ? 'bg-[#F8C838]' : 'bg-[#17182B]'
                                                     }`}
                                                     style={{ width: `${Math.min(100, persenTerisi)}%` }}
                                                 />
@@ -159,18 +159,18 @@ export default function CheckIn({ area, jenisOptions = ['motor', 'mobil', 'lainn
                                         </div>
 
                                         {/* Rincian Jenis Kendaraan */}
-                                        <div className="mt-3 flex gap-3 text-xs text-[#6B665E]">
-                                            <span className="rounded-md bg-panel-warm px-2 py-1">
-                                                Mobil: <strong>{item.sisa_mobil ?? 0}</strong>/{item.kapasitas_mobil ?? item.kapasitas}
+                                        <div className="mt-3 flex gap-2 text-[11px] text-[#7A7E8D]">
+                                            <span className="rounded-xl bg-[#F8F9FC] border border-[#E8EBF0] px-2.5 py-1">
+                                                Mobil: <strong className="text-[#17182B]">{item.sisa_mobil ?? 0}</strong>/{item.kapasitas_mobil ?? item.kapasitas}
                                             </span>
-                                            <span className="rounded-md bg-panel-warm px-2 py-1">
-                                                Motor: <strong>{item.sisa_motor ?? 0}</strong>/{item.kapasitas_motor ?? 0}
+                                            <span className="rounded-xl bg-[#F8F9FC] border border-[#E8EBF0] px-2.5 py-1">
+                                                Motor: <strong className="text-[#17182B]">{item.sisa_motor ?? 0}</strong>/{item.kapasitas_motor ?? 0}
                                             </span>
                                         </div>
                                     </div>
 
                                     <Button
-                                        variant="secondary"
+                                        variant={isPenuh ? 'secondary' : 'primary'}
                                         className="mt-4 w-full justify-center"
                                         disabled={isPenuh}
                                         onClick={() => openCreate(item.id_area)}

@@ -248,13 +248,24 @@ class TransaksiController extends Controller
             }
         }
 
+        $sudahKeluar = null;
         if (! $selected && $search) {
-            $cleanSearch = strtoupper(trim(str_replace('#', '', $search)));
+            $cleanSearch = strtoupper(trim(str_replace(['#', 'PARKIR-'], '', $search)));
+            $idCandidate = preg_match('/(?:id=|transaksi\/)?(\d+)/i', $cleanSearch, $matches) ? $matches[1] : null;
+
             $exact = Transaksi::with(['kendaraan', 'tarif', 'area', 'user'])
                 ->where('status', 'masuk')
-                ->where(function ($q) use ($cleanSearch) {
-                    $q->where('id_parkir', $cleanSearch)
-                        ->orWhereHas('kendaraan', fn ($k) => $k->where('plat_nomor', $cleanSearch));
+                ->where(function ($q) use ($cleanSearch, $idCandidate) {
+                    if ($idCandidate) {
+                        $q->where('id_parkir', $idCandidate);
+                    } elseif (is_numeric($cleanSearch)) {
+                        $q->where('id_parkir', (int) $cleanSearch);
+                    } else {
+                        $cleanPlate = str_replace(' ', '', $cleanSearch);
+                        $q->whereHas('kendaraan', fn ($k) => $k->where('plat_nomor', $cleanSearch)
+                            ->orWhereRaw("REPLACE(plat_nomor, ' ', '') = ?", [$cleanPlate])
+                        );
+                    }
                 })
                 ->first();
 
@@ -266,6 +277,20 @@ class TransaksiController extends Controller
                     'perkiraan_durasi' => $durasi,
                     'perkiraan_biaya' => TarifCalculator::biaya($durasi, $exact->tarif->tarif_per_jam),
                 ];
+            } else {
+                $searchId = $idCandidate ?: (is_numeric($cleanSearch) ? (int) $cleanSearch : null);
+                if ($searchId) {
+                    $riwayat = Transaksi::with(['kendaraan'])->where('status', 'keluar')->find($searchId);
+                    if ($riwayat) {
+                        $sudahKeluar = [
+                            'id_parkir' => $riwayat->id_parkir,
+                            'plat_nomor' => $riwayat->kendaraan?->plat_nomor,
+                            'waktu_masuk' => $riwayat->waktu_masuk?->format('d/m/Y H:i'),
+                            'waktu_keluar' => $riwayat->waktu_keluar?->format('d/m/Y H:i') ?? '-',
+                            'biaya_total' => (int) $riwayat->biaya_total,
+                        ];
+                    }
+                }
             }
         }
 
@@ -300,6 +325,7 @@ class TransaksiController extends Controller
 
         return Inertia::render('Transaksi/Checkout', [
             'selected' => $selected,
+            'sudah_keluar' => $sudahKeluar,
             'aktif' => $aktif,
             'filters' => [
                 'search' => $search,
@@ -367,6 +393,7 @@ class TransaksiController extends Controller
             'tarif_per_jam' => (int) $transaksi->tarif->tarif_per_jam,
             'biaya_total' => (int) $transaksi->biaya_total,
             'status' => $transaksi->status,
+            'metode_pembayaran' => $transaksi->metode_pembayaran ?? 'tunai',
             'petugas' => $transaksi->user->nama_lengkap,
         ];
     }

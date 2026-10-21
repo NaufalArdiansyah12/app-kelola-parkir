@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { rupiah } from '../../lib/format';
 
 export default function StrukMasuk({ transaksi }) {
@@ -31,6 +32,25 @@ export default function StrukMasuk({ transaksi }) {
                         <Line label="Masuk" value={transaksi.waktu_masuk} />
                         <Line label="Tarif/Jam" value={rupiah(transaksi.tarif_per_jam)} />
                         <Line label="Petugas" value={transaksi.petugas} />
+
+                        <div className="my-3 border-t border-dashed border-panel-border" />
+
+                        <div className="my-2 flex flex-col items-center justify-center">
+                            <div className="rounded-xl border border-panel-border bg-white p-3 shadow-2xs">
+                                <QRCodeSVG
+                                    value={String(transaksi.id_parkir)}
+                                    size={160}
+                                    level="M"
+                                    includeMargin={true}
+                                />
+                            </div>
+                            <span className="mt-1.5 font-mono text-xs font-bold tracking-wider text-ink">
+                                #{transaksi.id_parkir}
+                            </span>
+                            <span className="text-[9px] text-muted">
+                                Scan QR ini pada pos check-out keluar
+                            </span>
+                        </div>
 
                         <div className="my-3 border-t border-dashed border-panel-border" />
 

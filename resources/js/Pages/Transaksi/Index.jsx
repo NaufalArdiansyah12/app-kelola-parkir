@@ -3,6 +3,7 @@ import { useState } from 'react';
 import CheckoutModal from '../../Components/CheckoutModal';
 import Layout from '../../Components/Layout';
 import Pagination from '../../Components/Pagination';
+import QrScannerModal from '../../Components/QrScannerModal';
 import { Badge, Button, Card, EmptyRow, StatCard, Table, inputClass } from '../../Components/ui';
 
 export default function TransaksiIndex({ aktif, area = [], filters = {} }) {
@@ -11,6 +12,55 @@ export default function TransaksiIndex({ aktif, area = [], filters = {} }) {
     const [selectedAreaId, setSelectedAreaId] = useState(area[0]?.id_area ?? null);
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [checkoutTransaksi, setCheckoutTransaksi] = useState(null);
+    const [cameraOpen, setCameraOpen] = useState(false);
+    const [targetScanner, setTargetScanner] = useState(null);
+
+    const handleMulaiCheckOut = (item) => {
+        setTargetScanner(item);
+        setCameraOpen(true);
+    };
+
+    const handleScan = (decodedText, targetItem) => {
+        setCameraOpen(false);
+        setTargetScanner(null);
+
+        let code = decodedText.trim();
+        if (code.includes('id=')) {
+            const match = code.match(/id=([0-9]+)/);
+            if (match) code = match[1];
+        }
+
+        const cleanId = code.replace(/\D/g, '');
+
+        // Jika targetItem sesuai atau ditemukan
+        if (targetItem && (cleanId === String(targetItem.id_parkir) || code.toUpperCase() === (targetItem.plat_nomor || targetItem.kendaraan?.plat_nomor || '').toUpperCase())) {
+            setCheckoutTransaksi(targetItem);
+            return;
+        }
+
+        // Cari di data tabel aktif
+        const matchItem = aktif.data?.find(
+            (item) =>
+                String(item.id_parkir) === cleanId ||
+                item.kendaraan?.plat_nomor?.toUpperCase() === code.toUpperCase()
+        );
+
+        if (matchItem) {
+            setCheckoutTransaksi(matchItem);
+            return;
+        }
+
+        // Jika belum ada di list lokal, buka via halaman keluar
+        router.get('/transaksi/keluar', { search: code });
+    };
+
+    const handleBypass = (targetItem) => {
+        setCameraOpen(false);
+        setTargetScanner(null);
+        if (targetItem) {
+            setCheckoutTransaksi(targetItem);
+        }
+    };
 
     const currentArea = area.find((item) => item.id_area === selectedAreaId) ?? area[0] ?? null;
     const totalSisa = area.reduce((total, item) => total + (item.sisa ?? (item.kapasitas - item.terisi)), 0);
@@ -49,20 +99,20 @@ export default function TransaksiIndex({ aktif, area = [], filters = {} }) {
                                         setSelectedAreaId(item.id_area);
                                         setSelectedSlot(null);
                                     }}
-                                    className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+                                    className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all shadow-2xs ${
                                         isSelected
-                                            ? 'bg-ink text-white shadow-xs'
-                                            : 'border border-panel-border bg-white text-[#6B665E] hover:bg-panel-warm'
+                                            ? 'bg-[#17182B] text-white'
+                                            : 'border border-[#E8EBF0] bg-white text-[#7A7E8D] hover:text-[#17182B] hover:bg-[#F8F9FC]'
                                     }`}
                                 >
                                     <span>{item.nama_area}</span>
                                     <span
-                                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${
+                                        className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold tabular-nums ${
                                             isSelected
                                                 ? 'bg-white/20 text-white'
                                                 : penuh
                                                   ? 'bg-red-100 text-red-700'
-                                                  : 'bg-panel-warm text-muted'
+                                                  : 'bg-[#F8F9FC] text-[#7A7E8D]'
                                         }`}
                                     >
                                         {itemTerisi}/{item.kapasitas} ({persen}%)
@@ -73,13 +123,13 @@ export default function TransaksiIndex({ aktif, area = [], filters = {} }) {
                     </div>
 
                     {/* Kontrol Mode Tampilan & Check-In */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <div className="flex rounded-xl border border-panel-border bg-panel-warm p-1">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        <div className="flex rounded-full border border-[#E8EBF0] bg-white p-1 shadow-2xs">
                             <button
                                 type="button"
                                 onClick={() => setViewMode('denah')}
-                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                                    viewMode === 'denah' ? 'bg-white text-ink shadow-xs' : 'text-muted hover:text-ink'
+                                className={`rounded-full px-4 py-1.5 text-xs font-extrabold transition-all ${
+                                    viewMode === 'denah' ? 'bg-[#17182B] text-white shadow-xs' : 'text-[#7A7E8D] hover:text-[#17182B]'
                                 }`}
                             >
                                 Denah Visual
@@ -87,8 +137,8 @@ export default function TransaksiIndex({ aktif, area = [], filters = {} }) {
                             <button
                                 type="button"
                                 onClick={() => setViewMode('tabel')}
-                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                                    viewMode === 'tabel' ? 'bg-white text-ink shadow-xs' : 'text-muted hover:text-ink'
+                                className={`rounded-full px-4 py-1.5 text-xs font-extrabold transition-all ${
+                                    viewMode === 'tabel' ? 'bg-[#17182B] text-white shadow-xs' : 'text-[#7A7E8D] hover:text-[#17182B]'
                                 }`}
                             >
                                 Daftar Tabel ({aktif.total})
@@ -97,7 +147,7 @@ export default function TransaksiIndex({ aktif, area = [], filters = {} }) {
 
                         <Link
                             href="/transaksi/masuk?open=1"
-                            className="inline-flex items-center gap-1 rounded-xl bg-ink px-3.5 py-2 text-xs font-bold text-white transition hover:bg-black"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-[#F8C838] px-5 py-2 text-xs font-extrabold text-[#17182B] hover:bg-[#E9B927] transition-all shadow-sm active:scale-95"
                         >
                             + Check-In
                         </Link>
@@ -219,31 +269,31 @@ export default function TransaksiIndex({ aktif, area = [], filters = {} }) {
                                     {selectedSlot ? (
                                         selectedSlot.id_parkir ? (
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <span className="inline-flex items-center gap-2 rounded-full bg-panel-warm px-3 py-1.5 text-[#6B665E]">
-                                                    <span className="font-bold text-ink">{selectedSlot.label}</span>
-                                                    <span className="font-mono font-bold text-ink">{selectedSlot.plat_nomor}</span>
-                                                    <span className="capitalize text-muted">
+                                                <span className="inline-flex items-center gap-2 rounded-full bg-[#F8F9FC] border border-[#E8EBF0] px-3.5 py-1.5 text-[#17182B]">
+                                                    <span className="font-extrabold text-[#17182B]">{selectedSlot.label}</span>
+                                                    <span className="font-mono font-black text-[#17182B]">{selectedSlot.plat_nomor}</span>
+                                                    <span className="capitalize text-[#7A7E8D]">
                                                         {selectedSlot.jenis_kendaraan ?? selectedSlot.jenis}
                                                     </span>
-                                                    <span className="text-muted">masuk {selectedSlot.waktu_masuk}</span>
+                                                    <span className="text-[#7A7E8D]">masuk {selectedSlot.waktu_masuk}</span>
                                                 </span>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setCheckoutTransaksi(selectedSlot)}
-                                                    className="inline-flex items-center gap-1 rounded-xl bg-ink px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-black"
+                                                    onClick={() => handleMulaiCheckOut(selectedSlot)}
+                                                    className="inline-flex items-center gap-1.5 rounded-full bg-[#17182B] px-4 py-2 text-xs font-bold text-white transition hover:bg-black active:scale-95 shadow-sm"
                                                 >
                                                     Proses Check-Out &rarr;
                                                 </button>
                                             </div>
                                         ) : (
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <span className="inline-flex items-center gap-2 rounded-full bg-pastel-green px-3 py-1.5 text-pastel-green-text">
+                                                <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-100 px-3.5 py-1.5 text-emerald-800">
                                                     <span className="font-bold">{selectedSlot.label}</span>
                                                     <span>slot kosong ({selectedSlot.jenis})</span>
                                                 </span>
                                                 <Link
                                                     href={`/transaksi/masuk?open=1&area=${currentArea.id_area}`}
-                                                    className="inline-flex items-center gap-1 rounded-xl bg-pastel-yellow px-3 py-1.5 text-xs font-bold text-pastel-yellow-text transition hover:brightness-95"
+                                                    className="inline-flex items-center gap-1.5 rounded-full bg-[#F8C838] px-4 py-2 text-xs font-extrabold text-[#17182B] transition hover:bg-[#E9B927] active:scale-95 shadow-sm"
                                                 >
                                                     + Check-In di Slot Ini
                                                 </Link>
@@ -305,7 +355,7 @@ export default function TransaksiIndex({ aktif, area = [], filters = {} }) {
                                     <td className="px-3 py-2">
                                         <button
                                             type="button"
-                                            onClick={() => setCheckoutTransaksi(item)}
+                                            onClick={() => handleMulaiCheckOut(item)}
                                             className="text-xs font-bold text-accent hover:underline"
                                         >
                                             Check-Out
@@ -317,6 +367,17 @@ export default function TransaksiIndex({ aktif, area = [], filters = {} }) {
                         <Pagination paginator={aktif} />
                     </Card>
                 )}
+
+                <QrScannerModal
+                    open={cameraOpen}
+                    onClose={() => {
+                        setCameraOpen(false);
+                        setTargetScanner(null);
+                    }}
+                    onScan={handleScan}
+                    targetTransaksi={targetScanner}
+                    onBypass={handleBypass}
+                />
 
                 <CheckoutModal
                     open={Boolean(checkoutTransaksi)}

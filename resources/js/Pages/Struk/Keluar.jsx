@@ -31,6 +31,7 @@ export default function StrukKeluar({ transaksi }) {
                         <Line label="Keluar" value={transaksi.waktu_keluar} />
                         <Line label="Durasi" value={`${transaksi.durasi_jam} jam`} />
                         <Line label="Tarif/Jam" value={rupiah(transaksi.tarif_per_jam)} />
+                        <Line label="Metode" value={transaksi.metode_pembayaran === 'midtrans' ? 'QRIS / Midtrans' : 'Tunai'} />
 
                         <div className="my-3 border-t border-dashed border-panel-border" />
 

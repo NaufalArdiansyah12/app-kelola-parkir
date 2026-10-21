@@ -23,6 +23,24 @@
     --color-chart-bar: #1e1e1e;
     --color-accent: #6366f1;
 
+    --color-academy-yellow: #F8C838;
+    --color-academy-yellow-hover: #E9B927;
+    --color-academy-navy: #17182B;
+    --color-academy-navy-card: #1C1E36;
+    --color-academy-canvas: #F3F4F8;
+    --color-academy-surface: #FFFFFF;
+    --color-academy-subtle: #F8F9FC;
+    --color-academy-text-primary: #15161E;
+    --color-academy-text-secondary: #7A7E8D;
+    --color-academy-border: #E8EBF0;
+    --color-academy-accent-green: #22C55E;
+    --color-academy-accent-blue: #0EA5E9;
+    --color-academy-accent-red: #EF4444;
+
+    --shadow-soft: 0 8px 24px -4px rgba(23, 24, 43, 0.05), 0 2px 6px -1px rgba(23, 24, 43, 0.03);
+    --shadow-elevated: 0 18px 36px -6px rgba(23, 24, 43, 0.08), 0 8px 16px -3px rgba(23, 24, 43, 0.04);
+    --shadow-yellow-glow: 0 6px 20px rgba(248, 200, 56, 0.4);
+
     --radius-canvas: 36px;
     --radius-card-xl: 24px;
 }

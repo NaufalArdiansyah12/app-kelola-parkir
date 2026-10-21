@@ -5,11 +5,14 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KendaraanController;
 use App\Http\Controllers\LaporanKeuanganController;
+use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\RekapController;
 use App\Http\Controllers\TarifController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/api/midtrans/webhook', [MidtransController::class, 'webhook'])->name('midtrans.webhook');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
@@ -53,13 +56,18 @@ Route::middleware('auth')->group(function () {
         Route::redirect('/log-aktivitas', '/laporan-keuangan');
     });
 
-    Route::middleware('role:petugas')->group(function () {
+    Route::middleware('role:petugas,admin')->group(function () {
         Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
         Route::get('/transaksi/masuk', [TransaksiController::class, 'create'])->name('transaksi.create');
         Route::post('/transaksi/masuk', [TransaksiController::class, 'store'])->name('transaksi.store');
         Route::get('/transaksi/keluar', [TransaksiController::class, 'checkoutIndex'])->name('transaksi.keluar');
         Route::get('/transaksi/{transaksi}/checkout', [TransaksiController::class, 'checkout'])->name('transaksi.checkout');
         Route::post('/transaksi/{transaksi}/bayar', [TransaksiController::class, 'bayar'])->name('transaksi.bayar');
+        Route::post('/transaksi/{transaksi}/snap-token', [MidtransController::class, 'snapToken'])->name('transaksi.snap-token');
+        Route::post('/transaksi/{transaksi}/midtrans-qris', [MidtransController::class, 'qris'])->name('transaksi.midtrans-qris');
+        Route::post('/transaksi/{transaksi}/midtrans-va', [MidtransController::class, 'va'])->name('transaksi.midtrans-va');
+        Route::get('/transaksi/{transaksi}/midtrans-status', [MidtransController::class, 'cekStatus'])->name('transaksi.midtrans-status');
+        Route::post('/transaksi/{transaksi}/selesai-midtrans', [MidtransController::class, 'selesai'])->name('transaksi.selesai-midtrans');
     });
 
     Route::middleware('role:owner')->group(function () {

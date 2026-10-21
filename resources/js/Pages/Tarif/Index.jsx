@@ -2,7 +2,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import Layout from '../../Components/Layout';
 import Pagination from '../../Components/Pagination';
-import { AddButton, Badge, Button, Card, EmptyRow, Field, Modal, RowActions, StatCard, Table, inputClass } from '../../Components/ui';
+import { AddButton, Badge, Button, Card, ConfirmModal, EmptyRow, Field, Modal, RowActions, StatCard, Table, inputClass } from '../../Components/ui';
 import { rupiah } from '../../lib/format';
 
 const jenisTone = {
@@ -11,19 +11,27 @@ const jenisTone = {
     lainnya: 'yellow',
 };
 
-export default function TarifIndex({ tarif, jenisOptions, jenisTerpakai = [], stats = {} }) {
+export default function TarifIndex({ tarif, jenisOptions = [], jenisTerpakai = [], stats = {} }) {
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState(null);
-    const form = useForm({ jenis_kendaraan: jenisOptions[0] ?? 'motor', tarif_per_jam: '' });
+    const [deletingItem, setDeletingItem] = useState(null);
+    const form = useForm({ jenis_kendaraan: '', tarif_per_jam: '' });
 
     const jenisBaru = form.data.jenis_kendaraan.trim().toLowerCase();
-    const duplikat = jenisTerpakai.some(
-        (jenis) => jenis === jenisBaru && jenis !== editing?.jenis_kendaraan,
+    const duplikat = Boolean(
+        jenisBaru &&
+        jenisTerpakai.some(
+            (jenis) => jenis === jenisBaru && jenis !== editing?.jenis_kendaraan,
+        ),
+    );
+
+    const saranJenis = ['motor', 'mobil', 'truk', 'bus', 'sepeda', 'lainnya'].filter(
+        (j) => !jenisTerpakai.includes(j),
     );
 
     const openCreate = () => {
         setEditing(null);
-        form.setData({ jenis_kendaraan: jenisOptions[0] ?? 'motor', tarif_per_jam: '' });
+        form.setData({ jenis_kendaraan: '', tarif_per_jam: '' });
         form.clearErrors();
         setFormOpen(true);
     };
@@ -53,10 +61,12 @@ export default function TarifIndex({ tarif, jenisOptions, jenisTerpakai = [], st
         }
     };
 
-    const destroy = (item) => {
-        if (confirm(`Hapus tarif ${item.jenis_kendaraan}?`)) {
-            router.delete(`/tarif/${item.id_tarif}`, { preserveScroll: true });
-        }
+    const executeDelete = () => {
+        if (!deletingItem) return;
+        router.delete(`/tarif/${deletingItem.id_tarif}`, {
+            preserveScroll: true,
+            onFinish: () => setDeletingItem(null),
+        });
     };
 
     return (
@@ -89,7 +99,7 @@ export default function TarifIndex({ tarif, jenisOptions, jenisTerpakai = [], st
                                 <td className="px-3 py-3">
                                     <RowActions
                                         onEdit={() => openEdit(item)}
-                                        onDelete={() => destroy(item)}
+                                        onDelete={() => setDeletingItem(item)}
                                         editLabel={`Edit tarif ${item.jenis_kendaraan}`}
                                         deleteLabel={`Hapus tarif ${item.jenis_kendaraan}`}
                                     />
@@ -124,7 +134,7 @@ export default function TarifIndex({ tarif, jenisOptions, jenisTerpakai = [], st
                                 onChange={(e) => form.setData('jenis_kendaraan', e.target.value)}
                             />
                             <datalist id="daftar-jenis-kendaraan">
-                                {jenisOptions.map((jenis) => (
+                                {saranJenis.map((jenis) => (
                                     <option key={jenis} value={jenis} />
                                 ))}
                             </datalist>
@@ -170,6 +180,17 @@ export default function TarifIndex({ tarif, jenisOptions, jenisTerpakai = [], st
                         </div>
                     </form>
                 </Modal>
+
+                <ConfirmModal
+                    open={Boolean(deletingItem)}
+                    onClose={() => setDeletingItem(null)}
+                    onConfirm={executeDelete}
+                    title="Hapus Tarif Parkir"
+                    message={`Apakah Anda yakin ingin menghapus tarif untuk jenis kendaraan "${deletingItem?.jenis_kendaraan}"? Tindakan ini permanen dan tidak dapat dibatalkan.`}
+                    confirmText="Hapus Tarif"
+                    cancelText="Batal"
+                    variant="danger"
+                />
             </Layout>
         </>
     );

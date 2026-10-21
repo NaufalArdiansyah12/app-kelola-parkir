@@ -49,6 +49,10 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
             ],
+            'midtrans' => [
+                'client_key' => config('midtrans.client_key'),
+                'is_production' => config('midtrans.is_production'),
+            ],
         ];
     }
 }

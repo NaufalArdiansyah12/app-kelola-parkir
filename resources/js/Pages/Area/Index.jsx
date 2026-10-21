@@ -2,11 +2,12 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import Layout from '../../Components/Layout';
 import Pagination from '../../Components/Pagination';
-import { AddButton, Badge, Button, Card, EmptyRow, Field, Modal, RowActions, StatCard, Table, inputClass } from '../../Components/ui';
+import { AddButton, Badge, Button, Card, ConfirmModal, EmptyRow, Field, Modal, RowActions, StatCard, Table, inputClass } from '../../Components/ui';
 
 export default function AreaIndex({ area, stats = {} }) {
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState(null);
+    const [deletingArea, setDeletingArea] = useState(null);
     const [slotArea, setSlotArea] = useState(null);
     const [denahArea, setDenahArea] = useState(null);
     const [selectedSlot, setSelectedSlot] = useState(null);
@@ -79,10 +80,12 @@ export default function AreaIndex({ area, stats = {} }) {
         }
     };
 
-    const destroy = (item) => {
-        if (confirm(`Hapus area ${item.nama_area}?`)) {
-            router.delete(`/area/${item.id_area}`, { preserveScroll: true });
-        }
+    const executeDelete = () => {
+        if (!deletingArea) return;
+        router.delete(`/area/${deletingArea.id_area}`, {
+            preserveScroll: true,
+            onFinish: () => setDeletingArea(null),
+        });
     };
 
     return (
@@ -142,7 +145,7 @@ export default function AreaIndex({ area, stats = {} }) {
                                                 setSlotArea(item);
                                             }}
                                             onEdit={() => openEdit(item)}
-                                            onDelete={() => destroy(item)}
+                                            onDelete={() => setDeletingArea(item)}
                                             viewLabel={`Lihat slot area ${item.nama_area}`}
                                             editLabel={`Edit area ${item.nama_area}`}
                                             deleteLabel={`Hapus area ${item.nama_area}`}
@@ -403,6 +406,17 @@ export default function AreaIndex({ area, stats = {} }) {
                 >
                     {denahArea && <AturDenah area={denahArea} onClose={() => setDenahArea(null)} />}
                 </Modal>
+
+                <ConfirmModal
+                    open={Boolean(deletingArea)}
+                    onClose={() => setDeletingArea(null)}
+                    onConfirm={executeDelete}
+                    title="Hapus Area Parkir"
+                    message={`Apakah Anda yakin ingin menghapus area "${deletingArea?.nama_area}"? Seluruh slot parkir dan konfigurasi area ini akan dihapus.`}
+                    confirmText="Hapus Area"
+                    cancelText="Batal"
+                    variant="danger"
+                />
             </Layout>
         </>
     );

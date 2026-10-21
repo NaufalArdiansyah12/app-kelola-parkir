@@ -2,7 +2,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import Layout from '../../Components/Layout';
 import Pagination from '../../Components/Pagination';
-import { AddButton, Badge, Button, Card, EmptyRow, Field, Modal, RowActions, SearchInput, StatCard, Table, inputClass } from '../../Components/ui';
+import { AddButton, Badge, Button, Card, ConfirmModal, EmptyRow, Field, Modal, RowActions, SearchInput, StatCard, Table, inputClass } from '../../Components/ui';
 
 const emptyForm = {
     nama_lengkap: '',
@@ -29,6 +29,7 @@ const initials = (name) =>
 export default function UsersIndex({ users, filters, stats = {} }) {
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState(null);
+    const [deletingUser, setDeletingUser] = useState(null);
     const [search, setSearch] = useState(filters.search ?? '');
     const form = useForm({ ...emptyForm });
 
@@ -71,10 +72,12 @@ export default function UsersIndex({ users, filters, stats = {} }) {
         }
     };
 
-    const destroy = (user) => {
-        if (confirm(`Hapus user ${user.username}?`)) {
-            router.delete(`/users/${user.id_user}`, { preserveScroll: true });
-        }
+    const executeDelete = () => {
+        if (!deletingUser) return;
+        router.delete(`/users/${deletingUser.id_user}`, {
+            preserveScroll: true,
+            onFinish: () => setDeletingUser(null),
+        });
     };
 
     return (
@@ -137,7 +140,7 @@ export default function UsersIndex({ users, filters, stats = {} }) {
                                     <td className="px-3 py-3">
                                         <RowActions
                                             onEdit={() => openEdit(user)}
-                                            onDelete={() => destroy(user)}
+                                            onDelete={() => setDeletingUser(user)}
                                             editLabel={`Edit ${user.username}`}
                                             deleteLabel={`Hapus ${user.username}`}
                                         />
@@ -219,6 +222,17 @@ export default function UsersIndex({ users, filters, stats = {} }) {
                         </div>
                     </form>
                 </Modal>
+
+                <ConfirmModal
+                    open={Boolean(deletingUser)}
+                    onClose={() => setDeletingUser(null)}
+                    onConfirm={executeDelete}
+                    title="Hapus Akun Pengguna"
+                    message={`Apakah Anda yakin ingin menghapus akun user "${deletingUser?.nama_lengkap || deletingUser?.username}"? Tindakan ini permanen dan tidak dapat dibatalkan.`}
+                    confirmText="Hapus User"
+                    cancelText="Batal"
+                    variant="danger"
+                />
             </Layout>
         </>
     );
